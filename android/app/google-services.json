@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "925091590899",
+    "firebase_url": "https://budbringer-6c5ab.firebaseio.com",
+    "project_id": "budbringer-6c5ab",
+    "storage_bucket": "budbringer-6c5ab.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:925091590899:android:1a6069376b7f0059dafd86",
+        "android_client_info": {
+          "package_name": "com.shaheem.budbringer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "925091590899-oppikv6e7fcnldagrmn9hc0f227v98hn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD6TbHWR1zbasrdT2YczQ-QIQUA9E3dqs8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "925091590899-oppikv6e7fcnldagrmn9hc0f227v98hn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
