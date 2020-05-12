@@ -50,7 +50,23 @@ class Auth {
       print("Error");
     }
   }
-
+  // void getOTP(String phone, BuildContext context){
+  //   FirebaseAuth _auth = FirebaseAuth.instance;
+  //   _auth.verifyPhoneNumber(
+  //       phoneNumber: phone,
+  //       timeout: Duration(seconds: 60),
+  //       verificationCompleted: (AuthCredential credential) async {
+  //         AuthResult result = await _auth.signInWithCredential(credential);
+  //         userNotNull(context, result, phone);
+  //         //This callback would gets called when verification is done automaticlly
+  //       },
+  //       verificationFailed: (AuthException exception) {
+  //         print(exception.message);
+  //       },
+  //       // codeSent: (_,_){},
+  //       codeAutoRetrievalTimeout: null);
+  // }
+  // }
   void loginUser(String phone, BuildContext context) async {
     FirebaseAuth _auth = FirebaseAuth.instance;
     _auth.verifyPhoneNumber(
