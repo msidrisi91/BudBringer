@@ -1,76 +1,6 @@
-// import 'package:budbringer/services/authentication.dart';
-// import 'package:flutter/material.dart';
-
-// class LoginScreen extends StatelessWidget {
-//   final _phoneController = TextEditingController();
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//         body: SingleChildScrollView(
-//       child: Container(
-//         padding: EdgeInsets.all(32),
-//         child: Form(
-//           child: Column(
-//             crossAxisAlignment: CrossAxisAlignment.start,
-//             mainAxisAlignment: MainAxisAlignment.center,
-//             children: <Widget>[
-//               Text(
-//                 "Login",
-//                 style: TextStyle(
-//                     color: Colors.lightBlue,
-//                     fontSize: 36,
-//                     fontWeight: FontWeight.w500),
-//               ),
-//               SizedBox(
-//                 height: 16,
-//               ),
-//               TextFormField(
-//                 decoration: InputDecoration(
-//                     enabledBorder: OutlineInputBorder(
-//                         borderRadius: BorderRadius.all(Radius.circular(8)),
-//                         borderSide: BorderSide(color: Colors.grey[200])),
-//                     focusedBorder: OutlineInputBorder(
-//                         borderRadius: BorderRadius.all(Radius.circular(8)),
-//                         borderSide: BorderSide(color: Colors.grey[300])),
-//                     filled: true,
-//                     fillColor: Colors.grey[100],
-//                     hintText: "Mobile Number"),
-//                 controller: _phoneController,
-//               ),
-//               SizedBox(
-//                 height: 16,
-//               ),
-//               Container(
-//                 width: double.infinity,
-//                 child: FlatButton(
-//                   child: Text("LOGIN"),
-//                   textColor: Colors.white,
-//                   padding: EdgeInsets.all(16),
-//                   onPressed: () {
-//                     final phone = _phoneController.text.trim();
-//                     if (phone != '' && phone != null) {
-//                       Auth().loginUser(phone, context);
-//                     } else {
-//                       final snackbar = SnackBar(
-//                         content: Text('Enter A Phone Number'),
-//                         duration: Duration(seconds: 5),
-//                       );
-//                       Scaffold.of(context).showSnackBar(snackbar);
-//                     }
-//                   },
-//                   color: Colors.blue,
-//                 ),
-//               )
-//             ],
-//           ),
-//         ),
-//       ),
-//     ));
-//   }
-// }
 import 'package:budbringer/services/authentication.dart';
 import 'package:budbringer/utilities/color_const.dart';
+import 'package:budbringer/widgets/progress_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
@@ -82,16 +12,46 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _phoneController = TextEditingController();
+  final scrollController = ScrollController();
+  final mobileFocus = FocusNode();
+  final otpFocus = FocusNode();
+  final _formKey = GlobalKey<FormState>();
   String buttonText = 'Login';
+  String verificationId;
+  String otp;
+  bool sendingOtp = false;
+  _setVerificationId(id) {
+    setState(() {
+      verificationId = id;
+
+      buttonText = 'Verify';
+      sendingOtp = false;
+    });
+  }
+
+  _handleButton(context) {
+    if (_formKey.currentState.validate()) {
+      if (buttonText == 'Login') {
+        String phone = '+91' + _phoneController.text.trim();
+        setState(() {
+          if(mobileFocus.hasFocus)mobileFocus.unfocus();
+          sendingOtp = true;
+        });
+        Auth.getOTP(phone, context, scrollController, _setVerificationId);
+      } else {
+        showDialog(context: context, child: CustomLoading());
+        Auth.verifyOTP(_phoneController.text, context, otp, verificationId);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final double height = MediaQuery.of(context).size.height;
     final double width = MediaQuery.of(context).size.width;
-    final scrollController = ScrollController();
-    String otp;
     return Scaffold(
         body: Form(
+      key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
@@ -111,7 +71,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       image: AssetImage('assets/images/loginpage.jpg'),
                       fit: BoxFit.fitWidth,
                     ),
-                    
                   ),
                 ),
                 Container(
@@ -144,9 +103,27 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Padding(
                         padding: const EdgeInsets.only(right: 32, left: 32),
                         child: TextFormField(
+                          focusNode: mobileFocus,
                           keyboardType: TextInputType.phone,
+                          textInputAction: TextInputAction.done,
+                          onEditingComplete: () {
+                            if (!sendingOtp) _handleButton(context);
+                          },
+                          validator: (term) => term.length != 10
+                              ? '   * Enter a Valid Phone Number'
+                              : null,
                           onFieldSubmitted: (term) {},
                           decoration: InputDecoration(
+                              focusedErrorBorder: OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(32)),
+                                  borderSide:
+                                      BorderSide(color: Colors.grey[200])),
+                              errorBorder: OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(32)),
+                                  borderSide:
+                                      BorderSide(color: Colors.grey[200])),
                               enabledBorder: OutlineInputBorder(
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(32)),
@@ -171,20 +148,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: width,
                     child: Center(
                       child: Container(
-                        width: width * 0.5,
+                        width: width * 0.7,
                         child: PinCodeTextField(
                           textStyle:
                               GoogleFonts.mcLaren().copyWith(fontSize: 18),
                           backgroundColor: Color(0xfffafafa),
                           textInputType: TextInputType.number,
-                          length: 4,
+                          length: 6,
                           activeColor: primaryColor,
                           selectedColor: primaryColor,
                           inactiveColor: primaryColor,
                           obsecureText: false,
                           animationType: AnimationType.fade,
-                          shape: PinCodeFieldShape.box,
-                          animationDuration: Duration(milliseconds: 300),
+                          shape: PinCodeFieldShape.underline,
+                          animationDuration: Duration(milliseconds: 200),
                           borderRadius: BorderRadius.circular(5),
                           fieldHeight: 45,
                           fieldWidth: 45,
@@ -204,25 +181,7 @@ class _LoginScreenState extends State<LoginScreen> {
           Center(
             child: GestureDetector(
               onTap: () {
-                // final phone = _phoneController.text.trim();
-                // if (phone != '' && phone != null) {
-                //   // Auth().loginUser(phone, context);
-                //   print('Proceed to OTP');
-                // } else {
-                //   final snackbar = SnackBar(
-                //     content: Text('Enter A Phone Number'),
-                //     duration: Duration(seconds: 5),
-                //   );
-                //   Scaffold.of(context).showSnackBar(snackbar);
-                // }
-                if (buttonText == 'Login') {
-                  scrollController.animateTo(MediaQuery.of(context).size.width,
-                      duration: Duration(milliseconds: 678),
-                      curve: Curves.ease);
-                  setState(() {
-                    buttonText = 'Verify';
-                  });
-                }
+                if (!sendingOtp) _handleButton(context);
               },
               child: Container(
                 width: width * 0.4,
@@ -251,6 +210,17 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
+          sendingOtp
+              ? Center(
+                  child: Text(
+                    '\nSending OTP ...',
+                    style: GoogleFonts.mcLaren().copyWith(
+                      color: Colors.pinkAccent,
+                      fontSize: 12,
+                    ),
+                  ),
+                )
+              : Container(),
           buttonText == 'Login'
               ? Container()
               : Center(

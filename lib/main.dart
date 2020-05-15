@@ -1,4 +1,5 @@
 import 'package:budbringer/screens/login.dart';
+import 'package:budbringer/screens/sign_up.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:budbringer/screens/userlist.dart';
 
@@ -43,7 +44,7 @@ class MyApp extends StatelessWidget {
       title: 'BudBringer',
       themeMode: ThemeMode.dark,
       theme: ThemeData(primaryColor: Color(0xFFBC3358)),
-      home: LoginScreen(),
+      home: NewUserSignUp(),
       // _getScreenId(),
     );
   }
