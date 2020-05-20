@@ -14,12 +14,12 @@ class StorageService {
 
     if (url.isNotEmpty) {
       // Updating user profile image
-      RegExp exp = RegExp(r'userProfile_(.*).jpg');
+      RegExp exp = RegExp(r'ProfileImage_(.*).jpg');
       photoId = exp.firstMatch(url)[1];
     }
 
     StorageUploadTask uploadTask = storageRef
-        .child('images/users/userProfile_$photoId.jpg')
+        .child('images/users/ProfileImage_$photoId.jpg')
         .putFile(image);
     StorageTaskSnapshot storageSnap = await uploadTask.onComplete;
     String downloadUrl = await storageSnap.ref.getDownloadURL();

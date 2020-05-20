@@ -1,3 +1,4 @@
+import 'package:budbringer/screens/home_screen.dart';
 import 'package:budbringer/screens/login.dart';
 import 'package:budbringer/screens/sign_up.dart';
 import 'package:budbringer/screens/userlist.dart';
@@ -13,30 +14,16 @@ class Auth {
   static void userNotNull(BuildContext context, AuthResult result, phone) {
     FirebaseUser user = result.user;
     if (user != null) {
-      print('This is a new user ${result.additionalUserInfo.isNewUser}');
+      Navigator.of(context).pop();
       Navigator.of(context).pop();
       if (result.additionalUserInfo.isNewUser) {
+        print('This is a new user ${result.additionalUserInfo.isNewUser}');
         _firestore.collection('/users').document(user.uid).setData({
           'name': '',
           'phoneNumber': phone,
           'profileImageUrl': '',
           'chattingWith': null,
-          'unreadmessagecount': 0,
         });
-
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(
-        //     builder: (context) => Center(
-        //       child: RaisedButton(
-        //         child: Text('Log Out'),
-        //         onPressed: () {
-        //           logout(context);
-        //         },
-        //       ),
-        //     ),
-        //   ),
-        // );
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -49,9 +36,7 @@ class Auth {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => NewUserSignUp(
-              user: user,
-            ),
+            builder: (context) => HomeScreen(),
           ),
         );
 
@@ -68,14 +53,6 @@ class Auth {
         //     ),
         //   ),
         // );
-        // Navigator.of(context).pop();
-        // Navigator.pushReplacement(
-        //     context,
-        //     MaterialPageRoute(
-        //         builder: (context) => UserList(
-        //               currentUserId: user.uid,
-        //             ))
-        //             );
       }
     } else {
       print("Error");
@@ -107,7 +84,7 @@ class Auth {
         },
         codeSent: (String verificationId, [int forceResendingToken]) {
           controller.animateTo(MediaQuery.of(context).size.width,
-              duration: Duration(milliseconds: 678), curve: Curves.ease);
+              duration: Duration(milliseconds: 600), curve: Curves.ease);
           setVerificationId(verificationId);
         },
         codeAutoRetrievalTimeout: null);

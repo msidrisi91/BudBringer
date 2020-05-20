@@ -327,12 +327,18 @@
 // }
 import 'dart:io';
 
+import 'package:budbringer/screens/home_screen.dart';
+import 'package:budbringer/services/databaseservice.dart';
 import 'package:budbringer/utilities/color_const.dart';
 import 'package:budbringer/models/user_model.dart';
+import 'package:budbringer/widgets/progress_indicator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:budbringer/services/storage_service.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 
 class NewUserSignUp extends StatefulWidget {
   NewUserSignUp({this.user});
@@ -354,18 +360,11 @@ class _NewUserSignUpState extends State<NewUserSignUp> {
   String phoneNumber;
   FirebaseUser fireUser;
   User user;
-  bool onLastPage = false;
-  bool displayingPlaceholder = false;
   File _profileImage;
   TextStyle style = TextStyle(fontFamily: 'Montserrat', fontSize: 20.0);
-  TextEditingController nameController, aboutController;
+  TextEditingController nameController = TextEditingController();
+  TextEditingController aboutController = TextEditingController();
   int listIndex = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    // _getUser();
-  }
 
   Gradient appGradient = LinearGradient(
       begin: Alignment.topCenter,
@@ -373,94 +372,69 @@ class _NewUserSignUpState extends State<NewUserSignUp> {
       colors: [Color(0xFF6137D7), Color(0xFFBC3358)],
       stops: [0, 0.7]);
 
-  _handleButton(BuildContext context, double width,
-      {bool backward = false}) async {
+  _handleNextButton(BuildContext context, double width) async {
     if (formKeys[listIndex].currentState.validate()) {
       formKeys[listIndex].currentState.save();
       if (listIndex < 2) {
-        if (focusNodes[listIndex].hasFocus) {
-          focusNodes[listIndex].unfocus();
-        }
+        if (focusNodes[listIndex].hasFocus) focusNodes[listIndex].unfocus();
+        // print(nameController.text);
         setState(() {
-          backward ? listIndex-- : listIndex++;
+          listIndex++;
+          if (listIndex > 2) listIndex = 2;
         });
         scrollController.animateTo(listIndex * width,
             duration: Duration(milliseconds: 600), curve: Curves.ease);
         if (listIndex < 2) {
-          setState(() {
-            onLastPage == false;
-          });
           await Future.delayed(Duration(milliseconds: 600));
           FocusScope.of(context).requestFocus(focusNodes[listIndex]);
         }
-        if (listIndex == 2) {
-          setState(() {
-            onLastPage == true;
-          });
-        }
-      } else if (listIndex == 2) {}
+      }
     }
   }
 
-  // _getUser() async {
-  //   final _user = await DatabaseService.getUserWithId(fireUser.uid);
-  //   setState(() {
-  //     user = _user;
-  //   });
-  // }
+  _handleBackButton(BuildContext context, double width) async {
+    if (listIndex < 2) if (focusNodes[listIndex].hasFocus)
+      focusNodes[listIndex].unfocus();
 
-  // _submit() async {
-  //   String _profileImageUrl = '';
-  //   setState(() {
-  //     isLoading = true;
-  //   });
-  //   if (_profileImage == null) {
-  //     _profileImageUrl = user.profileImageUrl;
-  //   } else {
-  //     _profileImageUrl = await StorageService.uploadUserProfileImage(
-  //       user.profileImageUrl,
-  //       _profileImage,
-  //     );
-  //   }
+    setState(() {
+      listIndex--;
+      if (listIndex < 0) listIndex = 0;
+    });
+    scrollController.animateTo(listIndex * width,
+        duration: Duration(milliseconds: 600), curve: Curves.ease);
+    if (listIndex < 2) {
+      await Future.delayed(Duration(milliseconds: 600));
+      FocusScope.of(context).requestFocus(focusNodes[listIndex]);
+    }
+  }
 
-  //   User newUser = User(
-  //     id: user.id,
-  //     name: nameController.text,
-  //     profileImageUrl: _profileImageUrl,
-  //     about: aboutController.text,
-  //   );
-  //   // Database update
-  //   DatabaseService.updateUser(newUser);
-  //   setState(() {
-  //     isLoading = false;
-  //   });
-  //   Navigator.pushReplacement(
-  //       context,
-  //       MaterialPageRoute(
-  //           builder: (context) => UserList(
-  //                 currentUserId: fireUser.uid,
-  //               )));
-  // }
+  _submit() async {
+    String _profileImageUrl = '';
+    showDialog(context: context, child: CustomLoading());
+    if (_profileImage != null) {
+      _profileImageUrl = await StorageService.uploadUserProfileImage(
+        user.profileImageUrl,
+        _profileImage,
+      );
+    }
 
-  // ImageProvider _displayProfileImage() {
-  //   // No new profile image
-  //   if (user != null && _profileImage == null) {
-  //     // No existing profile image
-  //     if (user.profileImageUrl.isEmpty) {
-  //       // Display placeholder
-  //       return AssetImage('assets/images/user_placeholder.jpg');
-  //     } else {
-  //       // User profile image exists
-  //       return CachedNetworkImageProvider(user.profileImageUrl);
-  //     }
-  //   } else {
-  //     // New profile image
-  //     return FileImage(_profileImage);
-  //   }
-  // }
+    User newUser = User(
+      id: user.id,
+      name: nameController.text,
+      profileImageUrl: _profileImageUrl,
+      about: aboutController.text,
+    );
+    DatabaseService.updateUser(newUser);
+    Navigator.of(context).pop();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => HomeScreen()),
+    );
+  }
 
-  // _showSelectImageDialog() {
-  //   return Platform.isIOS ? _iosBottomSheet() : _androidDialog();
+  // _showSelectImageDialog(width) {
+  // return Platform.isIOS ? _iosBottomSheet() : _androidDialog();
+  // return _androidDialog(width);
   // }
 
   // _iosBottomSheet() {
@@ -488,54 +462,78 @@ class _NewUserSignUpState extends State<NewUserSignUp> {
   //   );
   // }
 
-  // _androidDialog() {
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return SimpleDialog(
-  //         title: Text('Add Photo'),
-  //         children: <Widget>[
-  //           SimpleDialogOption(
-  //             child: Text('Take Photo'),
-  //             onPressed: () => _handleImage(ImageSource.camera),
-  //           ),
-  //           SimpleDialogOption(
-  //             child: Text('Choose From Gallery'),
-  //             onPressed: () => _handleImage(ImageSource.gallery),
-  //           ),
-  //           SimpleDialogOption(
-  //             child: Text(
-  //               'Cancel',
-  //               style: TextStyle(
-  //                 color: Colors.redAccent,
-  //               ),
-  //             ),
-  //             onPressed: () => Navigator.pop(context),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
+  _androidDialog(width) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8.0))),
+          contentPadding: EdgeInsets.only(top: 10.0),
+          content: Container(
+            width: width * 0.5,
+            height: width * 0.4,
+            child: Column(
+              children: <Widget>[
+                FlatButton(
+                  onPressed: () => _handleImage(ImageSource.camera),
+                  child: Text(
+                    'Take Photo',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.mcLaren().copyWith(
+                      color: Colors.pinkAccent,
+                      fontSize: width * 0.04,
+                    ),
+                  ),
+                ),
+                FlatButton(
+                  onPressed: () => _handleImage(ImageSource.gallery),
+                  child: Text(
+                    'Gallery',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.mcLaren().copyWith(
+                      color: Colors.pinkAccent,
+                      fontSize: width * 0.04,
+                    ),
+                  ),
+                ),
+                FlatButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    'Cancel',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.mcLaren().copyWith(
+                      color: Colors.grey,
+                      fontSize: width * 0.04,
+                    ),
+                  ),
+                )
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
-  // _handleImage(ImageSource source) async {
-  //   Navigator.pop(context);
-  //   File profileImageFile = await ImagePicker.pickImage(source: source);
-  //   if (profileImageFile != null) {
-  //     profileImageFile = await _cropImage(profileImageFile);
-  //     setState(() {
-  //       _profileImage = profileImageFile;
-  //     });
-  //   }
-  // }
+  _handleImage(ImageSource source) async {
+    Navigator.pop(context);
+    File profileImageFile = await ImagePicker.pickImage(source: source);
+    if (profileImageFile != null) {
+      profileImageFile = await _cropImage(profileImageFile);
+      setState(() {
+        _profileImage = profileImageFile;
+      });
+    }
+  }
 
-  // _cropImage(File imageFile) async {
-  //   File croppedImage = await ImageCropper.cropImage(
-  //     sourcePath: imageFile.path,
-  //     aspectRatio: CropAspectRatio(ratioX: 1.0, ratioY: 1.0),
-  //   );
-  //   return croppedImage;
-  // }
+  _cropImage(File imageFile) async {
+    File croppedImage = await ImageCropper.cropImage(
+      sourcePath: imageFile.path,
+      aspectRatio: CropAspectRatio(ratioX: 1.0, ratioY: 1.0),
+    );
+    return croppedImage;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -570,7 +568,7 @@ class _NewUserSignUpState extends State<NewUserSignUp> {
                     ? "      Bro!! tell your name."
                     : null,
                 onFieldSubmitted: (term) {
-                  _handleButton(context, width);
+                  _handleNextButton(context, width);
                 },
                 decoration: InputDecoration(
                     hintStyle: GoogleFonts.mcLaren(),
@@ -627,7 +625,7 @@ class _NewUserSignUpState extends State<NewUserSignUp> {
                     ? "Even a word will be enough."
                     : null,
                 onFieldSubmitted: (term) {
-                  _handleButton(context, width);
+                  _handleNextButton(context, width);
                 },
                 decoration: InputDecoration(
                     errorMaxLines: 2,
@@ -662,7 +660,7 @@ class _NewUserSignUpState extends State<NewUserSignUp> {
       transitionBuilder: (Widget child, Animation<double> animation) {
         return ScaleTransition(child: child, scale: animation);
       },
-      child: !displayingPlaceholder
+      child: _profileImage == null
           ? Container(
               width: width,
               child: Column(
@@ -670,13 +668,13 @@ class _NewUserSignUpState extends State<NewUserSignUp> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   Text(
-                    'Great!!',
+                    'Great!!\n',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.mcLaren().copyWith(
                         color: Colors.lightBlueAccent, fontSize: width * 0.08),
                   ),
                   Text(
-                    "Can't wait to see your face. Can you send me you picture?",
+                    "Can't wait to see your face. Can you show me your picture?",
                     textAlign: TextAlign.center,
                     style: GoogleFonts.mcLaren()
                         .copyWith(color: primaryColor, fontSize: width * 0.06),
@@ -684,7 +682,51 @@ class _NewUserSignUpState extends State<NewUserSignUp> {
                 ],
               ),
             )
-          : Container(),
+          : GestureDetector(
+              onTap: () {
+                _androidDialog(width);
+              },
+              child: Column(
+                children: <Widget>[
+                  Expanded(
+                    child: Container(),
+                  ),
+                  Container(
+                    width: width,
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Container(
+                        width: width * 0.75,
+                        height: width * 0.75,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: primaryColor, width: 3),
+                          image: DecorationImage(
+                              image: FileImage(_profileImage),
+                              fit: BoxFit.fill),
+                          borderRadius: BorderRadius.circular(32),
+                        ),
+                      ),
+                    ),
+                  ),
+                  FlatButton(
+                    onPressed: () {
+                      setState(() {
+                        _profileImage = null;
+                      });
+                    },
+                    child: Center(
+                      child: Text(
+                        'Remove Image',
+                        style: GoogleFonts.mcLaren().copyWith(
+                          color: Colors.pinkAccent,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ),
     );
 
     return Scaffold(
@@ -694,7 +736,7 @@ class _NewUserSignUpState extends State<NewUserSignUp> {
             Column(
               children: <Widget>[
                 Container(
-                  height: height * 0.6,
+                  height: _profileImage == null ? height * 0.6 : height * 0.7,
                   child: ListView(
                     scrollDirection: Axis.horizontal,
                     controller: scrollController,
@@ -702,10 +744,13 @@ class _NewUserSignUpState extends State<NewUserSignUp> {
                     children: <Widget>[
                       name,
                       about,
+                      displayPicture,
                     ],
                   ),
                 ),
-                SizedBox(height: height * 0.2),
+                _profileImage == null
+                    ? SizedBox(height: height * 0.1)
+                    : Container(),
                 Center(
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 500),
@@ -713,10 +758,10 @@ class _NewUserSignUpState extends State<NewUserSignUp> {
                         (Widget child, Animation<double> animation) {
                       return ScaleTransition(child: child, scale: animation);
                     },
-                    child: !onLastPage
+                    child: listIndex != 2
                         ? GestureDetector(
                             onTap: () {
-                              _handleButton(context, width);
+                              _handleNextButton(context, width);
                             },
                             child: Padding(
                               key: new UniqueKey(),
@@ -748,15 +793,13 @@ class _NewUserSignUpState extends State<NewUserSignUp> {
                               ),
                             ),
                           )
-                        : !displayingPlaceholder
+                        : _profileImage == null
                             ? Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: <Widget>[
                                   GestureDetector(
                                     onTap: () {
-                                      setState(() {
-                                        displayingPlaceholder = true;
-                                      });
+                                      _androidDialog(width);
                                     },
                                     child: Padding(
                                       key: new UniqueKey(),
@@ -791,7 +834,7 @@ class _NewUserSignUpState extends State<NewUserSignUp> {
                                   ),
                                   GestureDetector(
                                     onTap: () {
-                                      // _handleButton(context, width);
+                                      _submit();
                                     },
                                     child: Padding(
                                       key: new UniqueKey(),
@@ -828,13 +871,13 @@ class _NewUserSignUpState extends State<NewUserSignUp> {
                               )
                             : GestureDetector(
                                 onTap: () {
-                                  // _handleButton(context, width);
+                                  _submit();
                                 },
                                 child: Padding(
                                   key: new UniqueKey(),
-                                  padding: const EdgeInsets.all(20.0),
+                                  padding: const EdgeInsets.all(15.0),
                                   child: Container(
-                                    width: width * 0.25,
+                                    width: width * 0.4,
                                     height: 48,
                                     decoration: BoxDecoration(
                                       borderRadius:
@@ -875,7 +918,7 @@ class _NewUserSignUpState extends State<NewUserSignUp> {
                             ),
                           ),
                           onPressed: () {
-                            _handleButton(context, width, backward: true);
+                            _handleBackButton(context, width);
                           },
                         ),
                       )

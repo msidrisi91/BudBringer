@@ -118,6 +118,7 @@ class DatabaseService {
 //     return posts;
 //   }
 
+
   static Future<User> getUserWithId(String userId) async {
     DocumentSnapshot userDocSnapshot = await usersRef.document(userId).get();
     if (userDocSnapshot.exists) {
