@@ -1,8 +1,8 @@
 Local DBMS
 
-messages('chat_id','from','type','text','link','date','time','timestamp')//from will be a number 0,1,2,3.... 
-chats('id','uid', 'isGrp', 'name', 'about', 'phone_number', 'display_image_path_or_link', 'last_msg_id', 'last_seen')
-participants('chat_id','id','uid','name','pchat_id')
-moments('id', 'type', 'path_or_link', 'timestamp', 'date', 'time', 'duration_available')
+messages('chat_id','from','type','text','link','timestamp')//from will be a number 0,1,2,3.... 
+chats('id','uid', 'isGrp', 'name', 'about', 'phoneNumber', 'display_image_path_or_link', 'last_msg_id', 'last_seen')
+participants('chat_id','id','uid','name', 'phoneNumber','pchat_id')
+moments('id', 'type', 'path_or_link', 'timestamp', 'duration_available')
 
 

@@ -6,7 +6,7 @@ class User {
   final String phoneNumber;
   final String profileImageUrl;
   final String about;
-  final int unreadmessagecount;
+  final bool isDataFilled;
 
   User({
     this.id,
@@ -14,7 +14,7 @@ class User {
     this.phoneNumber,
     this.profileImageUrl,
     this.about,
-    this.unreadmessagecount,
+    this.isDataFilled,
   });
 
   factory User.fromDoc(DocumentSnapshot doc) {
@@ -24,7 +24,7 @@ class User {
       phoneNumber: doc['phoneNumber'],
       profileImageUrl: doc['profileImageUrl'],
       about: doc['about'] ?? '',
-      unreadmessagecount: doc['unreadmessagecount']
+      isDataFilled: doc['isDataFilled'],
     );
   }
 }
