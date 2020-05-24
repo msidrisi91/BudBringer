@@ -1,5 +1,6 @@
-import 'package:budbringer/screens/home_screen.dart';
+
 import 'package:budbringer/screens/login.dart';
+import 'package:budbringer/utilities/loggedin_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -7,6 +8,7 @@ void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
   final FirebaseAuth auth = FirebaseAuth.instance;
+
   Widget _getScreenId() {
     return StreamBuilder<FirebaseUser>(
       stream: FirebaseAuth.instance.onAuthStateChanged,
@@ -25,9 +27,9 @@ class MyApp extends StatelessWidget {
             )),
           );
         } else {
+          print(snapshot.data.uid);
           if (snapshot.hasData && snapshot.data.uid != null) {
-            print(snapshot.data.uid);
-            return HomeScreen();
+            return LoggedInScreens(uid: snapshot.data.uid);
           } else {
             return LoginScreen();
           }

@@ -11,6 +11,7 @@ class DatabaseService {
       'name': user.name,
       'profileImageUrl': user.profileImageUrl,
       'about': user.about,
+      'isDataFilled': true,
     });
   }
 
@@ -126,4 +127,19 @@ class DatabaseService {
     }
     return User();
   }
+  static isDataFilled(String uid) async{
+    DocumentSnapshot userDocSnapshot = await usersRef.document(uid).get();
+    print(userDocSnapshot.data);
+    if (userDocSnapshot.exists) {
+      return userDocSnapshot.data['isDataFilled'];
+    }
+    else{
+      return false;
+    }
+  }
 }
+
+
+// TODO: Gif Dp
+// TODO: hide post
+// TODO: Save Story

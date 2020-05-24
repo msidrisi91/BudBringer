@@ -1,7 +1,6 @@
 import 'package:budbringer/screens/home_screen.dart';
 import 'package:budbringer/screens/login.dart';
 import 'package:budbringer/screens/sign_up.dart';
-import 'package:budbringer/screens/userlist.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -23,6 +22,7 @@ class Auth {
           'phoneNumber': phone,
           'profileImageUrl': '',
           'chattingWith': null,
+          'isDataFilled': false,
         });
         Navigator.pushReplacement(
           context,
